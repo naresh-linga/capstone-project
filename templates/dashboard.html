@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - AccidentAI Pro</title>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* --- THEME CONFIGURATION --- */
+        :root {
+            --bg-dark: #05070a;
+            --bg-panel: rgba(22, 27, 34, 0.7);
+            --text-main: #e6edf3;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --accent-glow: rgba(88, 166, 255, 0.25);
+            --danger: #f85149;
+            --success: #238636;
+            --warning: #d29922;
+            --border: rgba(48, 54, 61, 0.6);
+            --glass: blur(12px);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            background-image: radial-gradient(circle at 10% 20%, rgba(88, 166, 255, 0.05) 0%, transparent 20%),
+                              radial-gradient(circle at 90% 80%, rgba(248, 81, 73, 0.05) 0%, transparent 20%);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR (Unified) --- */
+        .sidebar { width: 260px; background: #0d1117; border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; z-index: 10; }
+        .brand { text-align: center; border-bottom: 1px solid var(--border); padding-bottom: 25px; margin-bottom: 25px; }
+        .brand h2 { color: var(--accent); margin: 0; font-family: 'Orbitron', sans-serif; letter-spacing: 2px; text-shadow: 0 0 15px var(--accent-glow); }
+        .nav-links { list-style: none; padding: 0; margin: 0; }
+        .nav-item { margin-bottom: 8px; }
+        .nav-item a { display: flex; align-items: center; padding: 14px; color: var(--text-muted); text-decoration: none; border-radius: 8px; transition: all 0.3s ease; font-weight: 500; }
+        .nav-item a:hover { background: rgba(255,255,255,0.05); color: var(--text-main); transform: translateX(5px); }
+        .nav-item.active a { background: linear-gradient(90deg, rgba(31, 111, 235, 0.2) 0%, rgba(31, 111, 235, 0) 100%); color: #58a6ff; border-left: 3px solid var(--accent); }
+        .nav-item i { width: 24px; margin-right: 12px; font-size: 18px; }
+        .logout { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); }
+        .logout a { color: var(--danger); }
+
+        /* --- MAIN DASHBOARD AREA --- */
+        .main-content { flex: 1; padding: 30px 40px; overflow-y: auto; position: relative; }
+
+        /* Header */
+        .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 35px; }
+        .welcome-text h1 { font-family: 'Orbitron'; font-size: 28px; margin: 0; background: linear-gradient(to right, #fff, #8b949e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .welcome-text p { color: var(--text-muted); margin: 5px 0 0; font-size: 14px; }
+        .system-status { display: flex; align-items: center; gap: 10px; background: rgba(35, 134, 54, 0.1); border: 1px solid rgba(35, 134, 54, 0.3); padding: 8px 16px; border-radius: 20px; color: #3fb950; font-weight: 600; font-size: 12px; box-shadow: 0 0 10px rgba(35, 134, 54, 0.2); }
+        .status-dot { width: 8px; height: 8px; background: #3fb950; border-radius: 50%; animation: pulse 2s infinite; }
+
+        /* KPI Grid */
+        .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 30px; }
+        .kpi-card {
+            background: var(--bg-panel); backdrop-filter: var(--glass);
+            border: 1px solid var(--border); border-radius: 16px; padding: 25px;
+            position: relative; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--accent); opacity: 0.5; }
+        .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); border-color: var(--accent); }
+        
+        .kpi-card.danger::before { background: var(--danger); }
+        .kpi-card.success::before { background: var(--success); }
+
+        .kpi-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px; }
+        .kpi-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .kpi-icon.blue { background: rgba(88, 166, 255, 0.15); color: var(--accent); }
+        .kpi-icon.red { background: rgba(248, 81, 73, 0.15); color: var(--danger); }
+        .kpi-icon.green { background: rgba(35, 134, 54, 0.15); color: var(--success); }
+        
+        .kpi-value { font-size: 36px; font-weight: 700; margin: 0; font-family: 'Orbitron'; letter-spacing: 1px; }
+        .kpi-label { color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
+
+        /* Chart Section */
+        .chart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; margin-bottom: 30px; }
+        .chart-card {
+            background: var(--bg-panel); backdrop-filter: var(--glass);
+            border: 1px solid var(--border); border-radius: 16px; padding: 25px;
+            height: 350px; display: flex; flex-direction: column;
+        }
+        .chart-header h3 { margin: 0; font-size: 16px; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+        .chart-wrapper { flex: 1; position: relative; width: 100%; height: 100%; margin-top: 15px; }
+
+        /* Recent Activity Table */
+        .table-card {
+            background: var(--bg-panel); backdrop-filter: var(--glass);
+            border: 1px solid var(--border); border-radius: 16px; padding: 0;
+            overflow: hidden;
+        }
+        .table-header { padding: 20px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .table-header h3 { margin: 0; font-size: 16px; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 15px 25px; color: var(--text-muted); font-size: 12px; text-transform: uppercase; background: rgba(0,0,0,0.2); }
+        td { padding: 15px 25px; border-bottom: 1px solid rgba(48, 54, 61, 0.3); font-size: 14px; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: rgba(255,255,255,0.02); }
+
+        .badge { padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge.accident { background: rgba(248, 81, 73, 0.15); color: var(--danger); border: 1px solid rgba(248, 81, 73, 0.3); }
+        .badge.normal { background: rgba(88, 166, 255, 0.15); color: var(--accent); border: 1px solid rgba(88, 166, 255, 0.3); }
+
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(63, 185, 80, 0); } 100% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0); } }
+
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="brand">
+            <h2>AccidentAI</h2>
+            <p style="color:#8b949e; font-size:10px; letter-spacing:2px; margin-top:5px;">ENTERPRISE V2.0</p>
+        </div>
+        <ul class="nav-links">
+            <li class="nav-item active"><a href="/dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+            <li class="nav-item"><a href="/monitor"><i class="fas fa-video"></i> Live Monitor</a></li>
+            <li class="nav-item"><a href="/analytics"><i class="fas fa-chart-line"></i> Analytics</a></li>
+            <li class="nav-item"><a href="/about"><i class="fas fa-users"></i> Team</a></li>
+            <li class="nav-item logout"><a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        
+        <div class="header-flex">
+            <div class="welcome-text">
+                <h1>Command Center</h1>
+                <p>Real-time system overview and accident telemetry.</p>
+            </div>
+            <div class="system-status">
+                <div class="status-dot"></div> SYSTEM ONLINE
+            </div>
+        </div>
+
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-label">Total Detections</div>
+                    <div class="kpi-icon blue"><i class="fas fa-eye"></i></div>
+                </div>
+                <h2 class="kpi-value" id="total-val">0</h2>
+                <div style="font-size:12px; color:#3fb950; margin-top:5px;">
+                    <i class="fas fa-arrow-up"></i> Live Updating
+                </div>
+            </div>
+
+            <div class="kpi-card danger">
+                <div class="kpi-header">
+                    <div class="kpi-label">Accidents Detected</div>
+                    <div class="kpi-icon red"><i class="fas fa-car-crash"></i></div>
+                </div>
+                <h2 class="kpi-value" id="accident-val" style="color: #f85149;">0</h2>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:5px;">
+                    Critical Alerts
+                </div>
+            </div>
+
+            <div class="kpi-card success">
+                <div class="kpi-header">
+                    <div class="kpi-label">System Confidence</div>
+                    <div class="kpi-icon green"><i class="fas fa-brain"></i></div>
+                </div>
+                <h2 class="kpi-value">98.5%</h2>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:5px;">
+                    Model Accuracy
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-grid">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3><i class="fas fa-wave-square" style="color:var(--accent)"></i> Live Detection Traffic</h3>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="trafficChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3><i class="fas fa-chart-pie" style="color:var(--warning)"></i> Incident Composition</h3>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="pieChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <div class="table-header">
+                <h3><i class="fas fa-list-alt"></i> Recent System Logs</h3>
+                <button style="background:none; border:none; color:var(--accent); cursor:pointer;"><i class="fas fa-sync-alt"></i></button>
+            </div>
+            <table id="logs-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Source</th>
+                        <th>Classification</th>
+                        <th>Confidence</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="5" style="text-align:center;">Initializing Data Stream...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+    </main>
+
+    <script>
+        // --- 1. SETUP CHARTS ---
+        const ctxTraffic = document.getElementById('trafficChart').getContext('2d');
+        const trafficChart = new Chart(ctxTraffic, {
+            type: 'line',
+            data: {
+                labels: Array(10).fill(''), // 10 points
+                datasets: [{
+                    label: 'Detections',
+                    data: Array(10).fill(0),
+                    borderColor: '#58a6ff',
+                    backgroundColor: 'rgba(88, 166, 255, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { display: false },
+                    y: { border: { display: false }, grid: { color: '#30363d' } }
+                }
+            }
+        });
+
+        const ctxPie = document.getElementById('pieChart').getContext('2d');
+        const pieChart = new Chart(ctxPie, {
+            type: 'doughnut',
+            data: {
+                labels: ['Accidents', 'Normal'],
+                datasets: [{
+                    data: [0, 100],
+                    backgroundColor: ['#f85149', '#238636'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: { legend: { position: 'bottom', labels: { color: '#8b949e' } } }
+            }
+        });
+
+        // --- 2. LIVE DATA FETCHING ---
+        let lastTotal = 0;
+
+        async function updateDashboard() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+
+                // Update KPI Cards
+                animateValue("total-val", lastTotal, data.total, 1000);
+                document.getElementById('accident-val').innerText = data.accidents;
+                lastTotal = data.total;
+
+               // Update Table
+                const tbody = document.querySelector('#logs-table tbody');
+                if (data.logs && data.logs.length > 0) {
+                    tbody.innerHTML = '';
+                    data.logs.forEach(log => {
+                        const isAccident = log.label.toLowerCase().includes('accident');
+                        const badgeClass = isAccident ? 'badge accident' : 'badge normal';
+                        const badgeText = isAccident ? 'CRITICAL' : 'LOGGED';
+                        
+                        // --- NEW LOGIC: Check Source ---
+                        // Checks if source is 'upload' (from app.py) or defaults to Live Feed
+                        const sourceIcon = (log.source === 'upload') 
+                            ? '<i class="fas fa-file-upload" style="color: #d29922;"></i> Photo Upload' 
+                            : '<i class="fas fa-camera" style="color: #58a6ff;"></i> Live Feed';
+
+                        const row = `
+                            <tr>
+                                <td style="color:#8b949e; font-family:monospace;">${new Date(log.timestamp).toLocaleTimeString()}</td>
+                                <td>${sourceIcon}</td>
+                                <td style="font-weight:600; color: ${isAccident ? '#f85149' : '#e6edf3'}">${log.label.toUpperCase()}</td>
+                                <td>
+                                    <div style="width: 100px; height: 6px; background: #30363d; border-radius: 3px; overflow: hidden;">
+                                        <div style="width: ${log.confidence}%; height: 100%; background: ${isAccident ? '#f85149' : '#58a6ff'};"></div>
+                                    </div>
+                                    <span style="font-size:10px;">${parseFloat(log.confidence).toFixed(1)}%</span>
+                                </td>
+                                <td><span class="${badgeClass}">${badgeText}</span></td>
+                            </tr>
+                        `;
+                        tbody.innerHTML += row;
+                    });
+                }
+
+                // Update Charts (Simulated Real-time effect)
+                // 1. Line Chart: Push new total count
+                const currentData = trafficChart.data.datasets[0].data;
+                currentData.push(data.total); // Add new
+                currentData.shift(); // Remove old
+                trafficChart.update();
+
+                // 2. Pie Chart: Update composition
+                pieChart.data.datasets[0].data = [data.accidents, data.total - data.accidents];
+                pieChart.update();
+
+            } catch (error) {
+                console.error("Error fetching stats:", error);
+            }
+        }
+
+        // --- 3. ANIMATION UTILS ---
+        function animateValue(id, start, end, duration) {
+            if (start === end) return;
+            const obj = document.getElementById(id);
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // Start Loop (Every 2 seconds)
+        setInterval(updateDashboard, 2000);
+        updateDashboard(); // Initial call
+    </script>
+</body>
+</html>

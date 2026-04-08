@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Team - AccidentAI Pro</title>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- THEME ENGINE --- */
+        :root {
+            --bg-dark: #05070a;
+            --bg-panel: rgba(22, 27, 34, 0.6);
+            --text-main: #e6edf3;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --accent-glow: rgba(88, 166, 255, 0.3);
+            --danger: #f85149;
+            --success: #238636;
+            --purple: #bc8cff;
+            --border: rgba(48, 54, 61, 0.5);
+            --glass: blur(16px);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(88, 166, 255, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(188, 140, 255, 0.05) 0%, transparent 20%);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar { width: 260px; background: #0d1117; border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; z-index: 10; }
+        .brand { text-align: center; border-bottom: 1px solid var(--border); padding-bottom: 25px; margin-bottom: 25px; }
+        .brand h2 { color: var(--accent); margin: 0; font-family: 'Orbitron', sans-serif; letter-spacing: 2px; text-shadow: 0 0 15px var(--accent-glow); }
+        .nav-links { list-style: none; padding: 0; margin: 0; }
+        .nav-item { margin-bottom: 8px; }
+        .nav-item a { display: flex; align-items: center; padding: 14px; color: var(--text-muted); text-decoration: none; border-radius: 8px; transition: all 0.3s ease; font-weight: 500; }
+        .nav-item a:hover { background: rgba(255,255,255,0.05); color: var(--text-main); transform: translateX(5px); }
+        .nav-item.active a { background: linear-gradient(90deg, rgba(88, 166, 255, 0.15) 0%, transparent 100%); color: #58a6ff; border-left: 3px solid var(--accent); }
+        .nav-item i { width: 24px; margin-right: 12px; font-size: 18px; }
+        .logout { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); }
+        .logout a { color: var(--danger); }
+
+        /* --- MAIN CONTENT --- */
+        .main-content { flex: 1; padding: 0; overflow-y: auto; scroll-behavior: smooth; }
+        .content-wrapper { padding: 40px; max-width: 1200px; margin: 0 auto; }
+
+        /* HERO SECTION */
+        .hero-section {
+            background: linear-gradient(180deg, rgba(22,27,34,0.8) 0%, rgba(13,17,23,0) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 60px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-title { font-family: 'Orbitron'; font-size: 42px; margin: 0; background: linear-gradient(to right, #fff, #58a6ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 2px; }
+        .hero-subtitle { color: var(--text-muted); font-size: 16px; margin-top: 10px; max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.6; }
+        .hero-badge { display: inline-block; background: rgba(88, 166, 255, 0.1); color: var(--accent); padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid rgba(88, 166, 255, 0.3); margin-bottom: 20px; }
+
+        /* TEAM GRID */
+        .section-title { font-family: 'Orbitron'; font-size: 24px; margin: 50px 0 30px 0; display: flex; align-items: center; gap: 15px; color: white; }
+        .section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border) 0%, transparent 100%); }
+
+        .team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 30px; }
+        
+        .team-card {
+            background: var(--bg-panel); backdrop-filter: var(--glass);
+            border: 1px solid var(--border); border-radius: 16px;
+            padding: 30px 20px; text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative; overflow: hidden;
+        }
+        .team-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(45deg, transparent 0%, rgba(88, 166, 255, 0.03) 100%);
+            opacity: 0; transition: 0.3s;
+        }
+        .team-card:hover { transform: translateY(-10px); border-color: var(--accent); box-shadow: 0 10px 40px rgba(88, 166, 255, 0.15); }
+        .team-card:hover::before { opacity: 1; }
+
+        .member-avatar {
+            width: 100px; height: 100px; margin: 0 auto 20px;
+            border-radius: 50%; background: #161b22;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 40px; color: var(--accent);
+            border: 2px solid var(--border);
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            position: relative; z-index: 1;
+        }
+        .team-card:hover .member-avatar { border-color: var(--accent); color: white; background: var(--accent); box-shadow: 0 0 30px var(--accent-glow); }
+
+        .member-name { font-family: 'Orbitron'; font-size: 18px; margin: 0 0 5px 0; color: white; position: relative; z-index: 1; }
+        .member-role { color: var(--purple); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; position: relative; z-index: 1; }
+        .member-id { background: rgba(0,0,0,0.3); display: inline-block; padding: 4px 10px; border-radius: 4px; font-family: monospace; color: var(--text-muted); font-size: 12px; position: relative; z-index: 1; }
+
+        /* TECH STACK */
+        .tech-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+        .tech-item {
+            background: rgba(22, 27, 34, 0.4); border: 1px solid var(--border);
+            padding: 15px; border-radius: 8px; display: flex; align-items: center; gap: 10px;
+            transition: 0.2s;
+        }
+        .tech-item:hover { background: rgba(255,255,255,0.05); border-color: var(--text-muted); }
+        .tech-icon { color: var(--accent); }
+        .tech-name { font-size: 14px; font-weight: 500; }
+
+        /* FOOTER */
+        .footer { text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 12px; border-top: 1px solid var(--border); margin-top: 60px; }
+
+        /* Animations */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="brand">
+            <h2>AccidentAI</h2>
+            <p style="color:#8b949e; font-size:10px; letter-spacing:2px; margin-top:5px;">ENTERPRISE V2.0</p>
+        </div>
+        <ul class="nav-links">
+            <li class="nav-item"><a href="/dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+            <li class="nav-item"><a href="/monitor"><i class="fas fa-video"></i> Live Monitor</a></li>
+            <li class="nav-item"><a href="/analytics"><i class="fas fa-chart-line"></i> Analytics</a></li>
+            <li class="nav-item active"><a href="/about"><i class="fas fa-users"></i> Team</a></li>
+            <li class="nav-item logout"><a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        
+        <div class="hero-section">
+            <div class="hero-badge">VERSION 2.0.0</div>
+            <h1 class="hero-title animate">Vision Zero</h1>
+            <p class="hero-subtitle animate delay-1">
+                Engineering the future of road safety through advanced Computer Vision and Real-time AI analytics. 
+                Built at Kalasalingam Academy of Research and Education.
+            </p>
+        </div>
+
+        <div class="content-wrapper">
+            
+            <div class="section-title animate delay-2">
+                <i class="fas fa-users" style="color: var(--purple);"></i> Meet the Minds
+            </div>
+
+            <div class="team-grid">
+                <div class="team-card animate delay-2">
+                    <div class="member-avatar"><i class="fas fa-brain"></i></div>
+                    <h3 class="member-name">Linga Naresh</h3>
+                    <div class="member-role">Lead Developer & AI</div>
+                    <div class="member-id">ID: 99220040907</div>
+                </div>
+
+                <div class="team-card animate delay-2">
+                    <div class="member-avatar"><i class="fas fa-database"></i></div>
+                    <h3 class="member-name">Samala Surya Teja</h3>
+                    <div class="member-role">Backend Engineer</div>
+                    <div class="member-id">ID: 99220040719</div>
+                </div>
+
+                <div class="team-card animate delay-3">
+                    <div class="member-avatar"><i class="fas fa-paint-brush"></i></div>
+                    <h3 class="member-name">Pamilla Likith Kumar</h3>
+                    <div class="member-role">UI/UX Designer</div>
+                    <div class="member-id">ID: 99220040670</div>
+                </div>
+
+                <div class="team-card animate delay-3">
+                    <div class="member-avatar"><i class="fas fa-microscope"></i></div>
+                    <h3 class="member-name">Velaga Venkateswarlu</h3>
+                    <div class="member-role">Research Lead</div>
+                    <div class="member-id">ID: 99220040768</div>
+                </div>
+            </div>
+
+            <div class="section-title animate delay-3">
+                <i class="fas fa-layer-group" style="color: var(--success);"></i> Technology Core
+            </div>
+
+            <div class="tech-grid animate delay-3">
+                <div class="tech-item"><i class="fab fa-python tech-icon"></i> <span class="tech-name">Python 3.9+</span></div>
+                <div class="tech-item"><i class="fas fa-eye tech-icon"></i> <span class="tech-name">YOLOv8</span></div>
+                <div class="tech-item"><i class="fas fa-server tech-icon"></i> <span class="tech-name">Flask</span></div>
+                <div class="tech-item"><i class="fas fa-database tech-icon"></i> <span class="tech-name">MySQL</span></div>
+                <div class="tech-item"><i class="fab fa-html5 tech-icon"></i> <span class="tech-name">HTML5 / CSS3</span></div>
+                <div class="tech-item"><i class="fab fa-js tech-icon"></i> <span class="tech-name">Chart.js</span></div>
+                <div class="tech-item"><i class="fas fa-video tech-icon"></i> <span class="tech-name">OpenCV</span></div>
+            </div>
+
+            <footer class="footer animate delay-3">
+                <p>&copy; 2025 AccidentAI Pro. Department of Computer Science & Engineering.</p>
+                <p style="opacity: 0.5;">Kalasalingam Academy of Research and Education</p>
+            </footer>
+
+        </div>
+    </main>
+
+</body>
+</html>

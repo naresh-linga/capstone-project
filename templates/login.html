@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - AccidentAI</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            background: #0d1117;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+            color: #c9d1d9;
+        }
+        .login-card {
+            background: #161b22;
+            padding: 40px;
+            width: 100%;
+            max-width: 380px;
+            border-radius: 12px;
+            border: 1px solid #30363d;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        .header h1 { color: #58a6ff; margin: 0; font-size: 28px; }
+        .header p { color: #8b949e; font-size: 12px; margin-top: 5px; text-transform: uppercase; letter-spacing: 2px; }
+        .input-group { position: relative; margin-bottom: 20px; }
+        .input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #8b949e; }
+        .input-group input {
+            width: 100%; padding: 12px 15px 12px 45px;
+            background: #0d1117; border: 1px solid #30363d;
+            border-radius: 8px; color: white; font-size: 16px;
+            box-sizing: border-box; transition: 0.3s;
+        }
+        .input-group input:focus { border-color: #58a6ff; outline: none; }
+        button {
+            width: 100%; padding: 12px; background: #238636;
+            color: white; border: none; border-radius: 8px;
+            font-size: 16px; font-weight: bold; cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover { background: #2ea043; }
+        .error { color: #f85149; background: rgba(248,81,73,0.1); padding: 10px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; }
+        .footer { margin-top: 25px; font-size: 12px; color: #484f58; border-top: 1px solid #30363d; padding-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="header">
+            <h1>AccidentAI</h1>
+            <p>Pro Security System</p>
+        </div>
+        <br>
+        {% if error %}<div class="error">{{ error }}</div>{% endif %}
+        <form method="POST">
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" name="username" placeholder="Username" required>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" name="password" placeholder="Password" required>
+            </div>
+            <button type="submit">Sign In</button>
+        </form>
+        <div class="footer">Protected System | Authorized Access Only</div>
+    </div>
+</body>
+</html>

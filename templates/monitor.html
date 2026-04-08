@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Monitor - AccidentAI Pro</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- CORE THEME --- */
+        :root {
+            --bg-dark: #090c10;
+            --bg-sidebar: #161b22;
+            --card-bg: #21262d;
+            --text-main: #e6edf3;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --accent-glow: rgba(88, 166, 255, 0.4);
+            --danger: #f85149;
+            --danger-glow: rgba(248, 81, 73, 0.4);
+            --success: #238636;
+            --border: #30363d;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR (Standardized) --- */
+        .sidebar { width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; z-index: 10; }
+        .brand { text-align: center; border-bottom: 1px solid var(--border); padding-bottom: 25px; margin-bottom: 25px; }
+        .brand h2 { color: var(--accent); margin: 0; font-family: 'Orbitron', sans-serif; letter-spacing: 2px; text-shadow: 0 0 10px var(--accent-glow); }
+        .brand p { font-size: 11px; color: var(--text-muted); margin-top: 5px; text-transform: uppercase; letter-spacing: 3px; }
+        
+        .nav-links { list-style: none; padding: 0; margin: 0; }
+        .nav-item { margin-bottom: 8px; }
+        .nav-item a { display: flex; align-items: center; padding: 14px; color: var(--text-muted); text-decoration: none; border-radius: 8px; transition: all 0.3s ease; font-weight: 500; }
+        .nav-item a:hover { background: rgba(255,255,255,0.05); color: var(--text-main); transform: translateX(5px); }
+        .nav-item.active a { background: linear-gradient(90deg, #1f6feb 0%, rgba(31, 111, 235, 0) 100%); color: white; border-left: 3px solid var(--accent); }
+        .nav-item i { width: 24px; margin-right: 12px; font-size: 18px; }
+        
+        .logout { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); }
+        .logout a { color: var(--danger); opacity: 0.8; }
+        .logout a:hover { opacity: 1; background: rgba(248, 81, 73, 0.1); }
+
+        /* --- MAIN CONTENT AREA --- */
+        .main-content { flex: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; background: radial-gradient(circle at top right, #1c2128 0%, #0d1117 100%); }
+        
+        /* Header */
+        .top-bar { padding: 25px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); background: rgba(13, 17, 23, 0.8); backdrop-filter: blur(10px); z-index: 5; }
+        .page-title h1 { margin: 0; font-size: 24px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .live-badge { background: rgba(248, 81, 73, 0.2); color: var(--danger); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid rgba(248, 81, 73, 0.4); display: flex; align-items: center; gap: 6px; }
+        .live-dot { width: 8px; height: 8px; background: var(--danger); border-radius: 50%; animation: pulse 1.5s infinite; }
+        
+        /* Tabs */
+        .tabs { display: flex; gap: 20px; background: var(--bg-sidebar); padding: 5px; border-radius: 8px; border: 1px solid var(--border); }
+        .tab-btn { background: transparent; border: none; color: var(--text-muted); padding: 8px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+        .tab-btn:hover { color: var(--text-main); }
+        .tab-btn.active { background: var(--accent); color: white; box-shadow: 0 4px 12px var(--accent-glow); }
+
+        /* --- CONTENT WRAPPER --- */
+        .content-scroll { padding: 30px 40px; overflow-y: auto; flex: 1; }
+        
+        .section-view { display: none; animation: fadeIn 0.4s ease-out; }
+        .section-view.active { display: block; }
+
+        /* --- VIDEO FEED STYLES (HUD Look) --- */
+        .video-container { 
+            position: relative; 
+            max-width: 900px; 
+            margin: 0 auto; 
+            border: 1px solid var(--border); 
+            border-radius: 4px; 
+            overflow: hidden; 
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            background: #000;
+        }
+        
+        .video-feed { width: 100%; display: block; height: auto; min-height: 500px; object-fit: cover; }
+        
+        /* HUD Overlays */
+        .hud-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; box-sizing: border-box; padding: 20px; }
+        .hud-corner { position: absolute; width: 40px; height: 40px; border: 3px solid var(--accent); opacity: 0.7; }
+        .tl { top: 20px; left: 20px; border-right: none; border-bottom: none; }
+        .tr { top: 20px; right: 20px; border-left: none; border-bottom: none; }
+        .bl { bottom: 20px; left: 20px; border-right: none; border-top: none; }
+        .br { bottom: 20px; right: 20px; border-left: none; border-top: none; }
+        
+        .scan-line {
+            position: absolute; width: 100%; height: 2px; background: rgba(88, 166, 255, 0.5);
+            box-shadow: 0 0 10px var(--accent);
+            top: 0; left: 0;
+            animation: scan 3s linear infinite;
+        }
+
+        .hud-status { position: absolute; top: 30px; right: 40px; color: var(--success); font-family: 'Orbitron'; font-size: 14px; letter-spacing: 2px; }
+        .hud-timestamp { position: absolute; bottom: 30px; right: 40px; color: var(--accent); font-family: 'Orbitron'; font-size: 14px; }
+        
+        /* Controls */
+        .control-panel { display: flex; justify-content: center; gap: 20px; margin-top: 30px; }
+        .btn { padding: 12px 30px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-start { background: var(--success); color: white; box-shadow: 0 4px 15px rgba(35, 134, 54, 0.3); }
+        .btn-start:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(35, 134, 54, 0.5); }
+        .btn-stop { background: var(--card-bg); color: var(--danger); border: 1px solid var(--danger); }
+        .btn-stop:hover { background: var(--danger); color: white; }
+
+        /* --- PHOTO UPLOAD STYLES --- */
+        .upload-container { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        
+        .upload-zone {
+            border: 2px dashed var(--border); background: rgba(22, 27, 34, 0.5);
+            border-radius: 12px; height: 400px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; cursor: pointer;
+            transition: 0.3s; position: relative; overflow: hidden;
+        }
+        .upload-zone:hover { border-color: var(--accent); background: rgba(88, 166, 255, 0.05); }
+        .upload-icon { font-size: 50px; color: var(--text-muted); margin-bottom: 20px; transition: 0.3s; }
+        .upload-zone:hover .upload-icon { color: var(--accent); transform: scale(1.1); }
+        .upload-text { color: var(--text-muted); font-size: 16px; }
+        
+        .result-zone {
+            background: var(--card-bg); border-radius: 12px; padding: 20px;
+            border: 1px solid var(--border); display: flex; flex-direction: column;
+        }
+        .result-header { border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 15px; font-family: 'Orbitron'; color: var(--accent); }
+        .detection-list { flex: 1; overflow-y: auto; }
+        .detection-item { display: flex; justify-content: space-between; padding: 10px; background: rgba(255,255,255,0.03); margin-bottom: 8px; border-radius: 4px; border-left: 3px solid var(--text-muted); }
+        .detection-item.danger { border-left-color: var(--danger); background: rgba(248, 81, 73, 0.1); }
+        
+        #preview-image { max-width: 100%; max-height: 100%; display: none; object-fit: contain; }
+
+        /* Animations */
+        @keyframes pulse { 0% { opacity: 1; box-shadow: 0 0 0 0 rgba(248, 81, 73, 0.7); } 70% { opacity: 1; box-shadow: 0 0 0 6px rgba(248, 81, 73, 0); } 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(248, 81, 73, 0); } }
+        @keyframes scan { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="brand">
+            <h2>AccidentAI</h2>
+            <p>PRO VISION v2.0</p>
+        </div>
+        <ul class="nav-links">
+            <li class="nav-item"><a href="/dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+            <li class="nav-item active"><a href="/monitor"><i class="fas fa-eye"></i> Live Monitor</a></li>
+            <li class="nav-item"><a href="/analytics"><i class="fas fa-chart-line"></i> Analytics</a></li>
+            <li class="nav-item"><a href="/about"><i class="fas fa-users"></i> Team</a></li>
+            <li class="nav-item logout"><a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <div class="page-title">
+                <h1><i class="fas fa-satellite-dish" style="color: var(--accent);"></i> Surveillance Hub</h1>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('live')"><i class="fas fa-video"></i> Live Feed</button>
+                <button class="tab-btn" onclick="switchTab('upload')"><i class="fas fa-image"></i> Photo Analysis</button>
+            </div>
+        </header>
+
+        <div class="content-scroll">
+            
+            <div id="live-section" class="section-view active">
+                <div class="video-container">
+                    <img id="video-stream" class="video-feed" src="{{ url_for('video_feed') }}" alt="Awaiting Stream...">
+                    
+                    <div class="hud-overlay">
+                        <div class="hud-corner tl"></div>
+                        <div class="hud-corner tr"></div>
+                        <div class="hud-corner bl"></div>
+                        <div class="hud-corner br"></div>
+                        <div class="scan-line"></div>
+                        
+                        <div class="live-badge" style="position: absolute; top: 30px; left: 40px;">
+                            <div class="live-dot"></div> LIVE STREAMING
+                        </div>
+                        <div class="hud-status">SYSTEM ARMED</div>
+                        <div class="hud-timestamp" id="timestamp">00:00:00</div>
+                    </div>
+                </div>
+
+                <div class="control-panel">
+                    <button class="btn btn-start" onclick="toggleCamera('start')">
+                        <i class="fas fa-power-off"></i> Activate System
+                    </button>
+                    <button class="btn btn-stop" onclick="toggleCamera('stop')">
+                        <i class="fas fa-stop-circle"></i> Terminate Feed
+                    </button>
+                </div>
+            </div>
+
+            <div id="upload-section" class="section-view">
+                <div class="upload-container">
+                    <div class="upload-zone" onclick="document.getElementById('fileInput').click()" id="dropZone">
+                        <input type="file" id="fileInput" hidden accept="image/*" onchange="handleFileSelect(event)">
+                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                        <h3 style="margin: 0; color: white;">Click or Drop Image Here</h3>
+                        <p class="upload-text">Supports JPG, PNG, JPEG</p>
+                        <img id="preview-image" src="" alt="Preview">
+                    </div>
+
+                    <div class="result-zone">
+                        <div class="result-header">
+                            <i class="fas fa-microchip"></i> ANALYSIS RESULTS
+                        </div>
+                        <div id="detection-results" class="detection-list">
+                            <div style="text-align: center; color: var(--text-muted); padding-top: 50px;">
+                                Waiting for image input...
+                            </div>
+                        </div>
+                        <button class="btn btn-start" style="width: 100%; margin-top: 20px; justify-content: center;" onclick="uploadAndAnalyze()">
+                            <i class="fas fa-search"></i> Run Detection
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // --- TAB LOGIC ---
+        function switchTab(tab) {
+            // UI Toggle
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            // Section Toggle
+            document.querySelectorAll('.section-view').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(tab + '-section').classList.add('active');
+        }
+
+        // --- CAMERA LOGIC ---
+        function toggleCamera(action) {
+            fetch(`/api/camera/${action}`)
+                .then(res => res.json())
+                .then(data => {
+                    const img = document.getElementById('video-stream');
+                    if(action === 'start') {
+                        // Force refresh timestamp to bypass cache
+                        img.src = "{{ url_for('video_feed') }}?" + new Date().getTime();
+                        img.style.opacity = '1';
+                    } else {
+                        img.style.opacity = '0.3';
+                    }
+                });
+        }
+
+        // --- TIMESTAMP UPDATE ---
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('timestamp').innerText = now.toLocaleTimeString() + " | " + now.toLocaleDateString();
+        }, 1000);
+
+        // --- IMAGE UPLOAD LOGIC ---
+        let selectedFile = null;
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                selectedFile = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById('preview-image');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                    
+                    // Hide icons
+                    document.querySelector('.upload-icon').style.display = 'none';
+                    document.querySelector('.upload-text').style.display = 'none';
+                    document.querySelector('h3').style.display = 'none';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function uploadAndAnalyze() {
+            if (!selectedFile) {
+                alert("Please select an image first!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            
+            // Show loading
+            const resultList = document.getElementById('detection-results');
+            resultList.innerHTML = '<div style="text-align:center; color: var(--accent);"><i class="fas fa-spinner fa-spin"></i> Processing...</div>';
+
+            fetch('/api/analyze_image', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    resultList.innerHTML = `<div style="color:var(--danger)">Error: ${data.error}</div>`;
+                    return;
+                }
+
+                // Show annotated image
+                document.getElementById('preview-image').src = data.image;
+
+                // List detections
+                resultList.innerHTML = '';
+                if(data.detections.length === 0) {
+                    resultList.innerHTML = '<div style="text-align:center;">No objects detected.</div>';
+                } else {
+                    data.detections.forEach(det => {
+                        const isAccident = det.label.toLowerCase().includes('accident');
+                        const itemClass = isAccident ? 'detection-item danger' : 'detection-item';
+                        const icon = isAccident ? '<i class="fas fa-exclamation-triangle"></i>' : '<i class="fas fa-check-circle"></i>';
+                        
+                        const html = `
+                            <div class="${itemClass}">
+                                <span>${icon} <strong>${det.label.toUpperCase()}</strong></span>
+                                <span>${det.conf.toFixed(1)}%</span>
+                            </div>
+                        `;
+                        resultList.innerHTML += html;
+                    });
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                resultList.innerHTML = '<div style="color:var(--danger)">Server Connection Failed</div>';
+            });
+        }
+    </script>
+</body>
+</html>
